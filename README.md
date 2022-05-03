@@ -5,7 +5,7 @@ React hook around apollo cache
 ```jsx
 import { gql, ApolloClient, ApolloProvider } from "@apollo/client";
 import { buildSchema } from "graphql";
-import useGraphQL from "use-graphql";
+import useGraphQLCache from "use-graphql-cache";
 
 const cache = new InMemoryCache();
 
@@ -38,7 +38,7 @@ function Counter() {
   const {
     data: { counter },
     update,
-  } = useGraphQL({ query, data: { counter: 0 } });
+  } = useGraphQLCache({ query, data: { counter: 0 } });
 
   return (
     <button onClick={() => update({ counter: { increment: 1 } })}>
