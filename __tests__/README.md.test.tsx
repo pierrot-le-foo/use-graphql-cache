@@ -1,11 +1,27 @@
-# use-graphql-cache
-
-React hook around apollo cache.
-
-```jsx
-import { gql, ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
+import React from "react";
+import {
+  gql,
+  ApolloClient,
+  ApolloProvider,
+  InMemoryCache,
+  useApolloClient,
+  ApolloCache,
+} from "@apollo/client";
 import { buildSchema } from "graphql";
+
+import useGraphQLCache from "../src";
+
+import "@testing-library/react/dont-cleanup-after-each";
+
+import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import SchemaLink from "apollo-schema-link";
+
+type Int = number;
+
+interface Query {
+  counter: Int;
+}
 
 const cache = new InMemoryCache();
 
@@ -14,6 +30,12 @@ const schema = buildSchema(`
     counter: Int!
   }
 `);
+
+const query = gql`
+  query {
+    counter
+  }
+`;
 
 const client = new ApolloClient({
   link: new SchemaLink({ schema }),
@@ -28,39 +50,29 @@ function App() {
   );
 }
 
-import useGraphQLCache from "use-graphql-cache";
-import { gql, useApolloClient } from "@apollo/client";
-
-const query = gql`
-  query {
-    counter
-  }
-`;
-
 function Counter() {
   const { cache } = useApolloClient();
 
   const {
     data: { counter },
     update,
-  } = useGraphQLCache({ cache, query, data: { counter: 0 } });
+  } = useGraphQLCache<Pick<Query, "counter">>({
+    cache: cache as ApolloCache<Pick<Query, "counter">>,
+    query,
+    data: { counter: 0 },
+  });
 
   return (
-    <button onClick={() => update({ counter: { increment: 1 } })}>
-      {counter}
-    </button>
+    <button onClick={() => update.increment({ counter: 1 })}>{counter}</button>
   );
 }
 
-import { cleanup, render, screen } from "@testing-library/react";
-import { userEvent } from "@testing-library/userEvent";
-
 describe("Counter", () => {
   beforeAll(() => {
-    render(<Counter />);
+    render(<App />);
   });
 
-  afterAll(cleanup)
+  afterAll(cleanup);
 
   it("should have counter equals 0", () => {
     expect(screen.getByRole("button", { name: "0" })).toBeInTheDocument();
@@ -74,4 +86,3 @@ describe("Counter", () => {
     expect(screen.getByRole("button", { name: "1" })).toBeInTheDocument();
   });
 });
-```
